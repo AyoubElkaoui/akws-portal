@@ -1,0 +1,685 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// === ENUMS ===
+
+enum Role {
+  ADMIN
+  CLIENT
+}
+
+enum Plan {
+  STARTER
+  BUSINESS
+  PREMIUM
+}
+
+enum ProjectStatus {
+  OFFERTE
+  ACTIEF
+  AFGEROND
+  GEPAUZEERD
+}
+
+enum RevisionStatus {
+  AANGEVRAAGD
+  IN_BEHANDELING
+  AFGEROND
+}
+
+enum InvoiceStatus {
+  CONCEPT
+  VERZONDEN
+  BETAALD
+  VERLOPEN
+}
+
+enum ReminderType {
+  HERINNERING_1
+  HERINNERING_2
+  AANMANING
+}
+
+enum CampaignStatus {
+  CONCEPT
+  GEPLAND
+  VERZONDEN
+}
+
+enum AppointmentStatus {
+  BEVESTIGD
+  GEANNULEERD
+  AFGEROND
+}
+
+enum ReviewSource {
+  GOOGLE
+  MANUAL
+}
+
+enum TicketStatus {
+  OPEN
+  IN_BEHANDELING
+  GESLOTEN
+}
+
+enum TicketPriority {
+  LAAG
+  NORMAAL
+  HOOG
+  URGENT
+}
+
+enum MaintenanceType {
+  UPDATE
+  BACKUP
+  SECURITY
+}
+
+enum VatRate {
+  STANDAARD
+  LAAG
+  VRIJGESTELD
+}
+
+enum InvoiceType {
+  KLANT_FACTUUR
+  PLATFORM_FACTUUR
+}
+
+// === CORE MODELS ===
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String
+  role          Role      @default(CLIENT)
+  tenantId      String?
+  avatar        String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tenant         Tenant?         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ticketMessages TicketMessage[]
+  notifications  Notification[]
+
+  @@index([tenantId])
+  @@index([email])
+}
+
+model Tenant {
+  id           String   @id @default(cuid())
+  companyName  String
+  slug         String   @unique
+  domain       String?
+  plan         Plan     @default(STARTER)
+  logo         String?
+  primaryColor String   @default("#0F172A")
+  active       Boolean  @default(true)
+  address      String?
+  postalCode   String?
+  city         String?
+  phone        String?
+  email        String?
+  kvkNumber    String?
+  btwNumber    String?
+  iban         String?
+  bic          String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users              User[]
+  tenantModules      TenantModule[]
+  projects           Project[]
+  websiteStatus      WebsiteStatus[]
+  maintenanceLogs    MaintenanceLog[]
+  invoices           Invoice[]
+  contacts           Contact[]
+  contactTags        ContactTag[]
+  emailCampaigns     EmailCampaign[]
+  formSubmissions    FormSubmission[]
+  appointments       Appointment[]
+  availabilitySlots  AvailabilitySlot[]
+  bookingWidgets     BookingWidget[]
+  pageViews          PageView[]
+  analyticsSummaries AnalyticsSummary[]
+  files              File[]
+  folders            Folder[]
+  reviews            Review[]
+  reviewRequests     ReviewRequest[]
+  testimonials       Testimonial[]
+  tickets            Ticket[]
+  activityEvents     ActivityEvent[]
+  uptimeChecks       UptimeCheck[]
+  websiteAlerts      WebsiteAlert[]
+
+  @@index([slug])
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  createdAt   DateTime @default(now())
+
+  tenantModules TenantModule[]
+}
+
+model TenantModule {
+  id       String  @id @default(cuid())
+  tenantId String
+  moduleId String
+  enabled  Boolean @default(false)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, moduleId])
+  @@index([tenantId])
+}
+
+// === MODULE: Projecten & Website ===
+
+model Project {
+  id          String        @id @default(cuid())
+  tenantId    String
+  name        String
+  status      ProjectStatus @default(OFFERTE)
+  startDate   DateTime?
+  endDate     DateTime?
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  milestones Milestone[]
+  revisions  Revision[]
+
+  @@index([tenantId])
+}
+
+model Milestone {
+  id        String    @id @default(cuid())
+  projectId String
+  title     String
+  dueDate   DateTime?
+  completed Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Revision {
+  id          String         @id @default(cuid())
+  projectId   String
+  description String
+  status      RevisionStatus @default(AANGEVRAAGD)
+  remaining   Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model WebsiteStatus {
+  id            String    @id @default(cuid())
+  tenantId      String
+  url           String
+  uptimePercent Float     @default(100)
+  lastCheck     DateTime  @default(now())
+  sslExpiry     DateTime?
+  loadTime      Float?
+  isOnline      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model MaintenanceLog {
+  id          String          @id @default(cuid())
+  tenantId    String
+  description String
+  type        MaintenanceType
+  performedAt DateTime        @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+// === MODULE: Facturatie ===
+
+model Invoice {
+  id              String        @id @default(cuid())
+  tenantId        String
+  type            InvoiceType   @default(KLANT_FACTUUR)
+  invoiceNumber   String
+  customerName    String
+  customerEmail   String
+  items           Json
+  subtotal        Float
+  vatRate         VatRate       @default(STANDAARD)
+  vatAmount       Float
+  total           Float
+  status          InvoiceStatus @default(CONCEPT)
+  dueDate         DateTime
+  paidAt          DateTime?
+  molliePaymentId String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoiceItems     InvoiceItem[]
+  paymentReminders PaymentReminder[]
+
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId])
+  @@index([status])
+}
+
+model InvoiceItem {
+  id          String @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Float
+  unitPrice   Float
+  total       Float
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+model PaymentReminder {
+  id        String       @id @default(cuid())
+  invoiceId String
+  sentAt    DateTime     @default(now())
+  type      ReminderType
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+// === MODULE: CRM ===
+
+model Contact {
+  id              String    @id @default(cuid())
+  tenantId        String
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String?
+  company         String?
+  notes           String?
+  lastContactedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contactNotes    ContactNote[]
+  contactTags     ContactTagLink[]
+  emailRecipients EmailRecipient[]
+
+  @@index([tenantId])
+}
+
+model ContactNote {
+  id        String   @id @default(cuid())
+  contactId String
+  content   String
+  createdAt DateTime @default(now())
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([contactId])
+}
+
+model ContactTag {
+  id       String @id @default(cuid())
+  tenantId String
+  name     String
+  color    String @default("#3B82F6")
+
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contacts ContactTagLink[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
+model ContactTagLink {
+  id        String @id @default(cuid())
+  contactId String
+  tagId     String
+
+  contact Contact    @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  tag     ContactTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, tagId])
+}
+
+// === MODULE: E-mail ===
+
+model EmailCampaign {
+  id             String         @id @default(cuid())
+  tenantId       String
+  subject        String
+  body           String
+  status         CampaignStatus @default(CONCEPT)
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  recipientCount Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  tenant     Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  recipients EmailRecipient[]
+
+  @@index([tenantId])
+}
+
+model EmailRecipient {
+  id         String  @id @default(cuid())
+  campaignId String
+  contactId  String?
+  email      String
+  opened     Boolean @default(false)
+  clicked    Boolean @default(false)
+
+  campaign EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contact  Contact?      @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([campaignId])
+}
+
+model FormSubmission {
+  id        String   @id @default(cuid())
+  tenantId  String
+  formName  String
+  data      Json
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+// === MODULE: Afspraken ===
+
+model Appointment {
+  id            String            @id @default(cuid())
+  tenantId      String
+  customerName  String
+  customerEmail String
+  customerPhone String?
+  date          DateTime
+  startTime     String
+  endTime       String
+  status        AppointmentStatus @default(BEVESTIGD)
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([date])
+}
+
+model AvailabilitySlot {
+  id        String  @id @default(cuid())
+  tenantId  String
+  dayOfWeek Int // 0 = Zondag, 1 = Maandag, ..., 6 = Zaterdag
+  startTime String
+  endTime   String
+  active    Boolean @default(true)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model BookingWidget {
+  id          String  @id @default(cuid())
+  tenantId    String
+  title       String
+  description String?
+  duration    Int     @default(30) // minuten
+  color       String  @default("#0F172A")
+  embedCode   String?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+// === MODULE: Statistieken ===
+
+model PageView {
+  id        String   @id @default(cuid())
+  tenantId  String
+  page      String
+  referrer  String?
+  country   String?
+  device    String?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([createdAt])
+}
+
+model AnalyticsSummary {
+  id             String   @id @default(cuid())
+  tenantId       String
+  date           DateTime
+  totalVisitors  Int      @default(0)
+  uniqueVisitors Int      @default(0)
+  topPages       Json?
+  topReferrers   Json?
+  createdAt      DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, date])
+  @@index([tenantId])
+}
+
+// === MODULE: Bestanden ===
+
+model File {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  key       String // R2 key
+  size      Int
+  mimeType  String
+  folderId  String?
+  shareLink String?  @unique
+  createdAt DateTime @default(now())
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  folder Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([folderId])
+}
+
+model Folder {
+  id       String  @id @default(cuid())
+  tenantId String
+  name     String
+  parentId String?
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  parent   Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Folder[] @relation("FolderHierarchy")
+  files    File[]
+
+  @@index([tenantId])
+  @@index([parentId])
+}
+
+// === MODULE: Reviews ===
+
+model Review {
+  id           String       @id @default(cuid())
+  tenantId     String
+  customerName String
+  rating       Int
+  text         String?
+  source       ReviewSource @default(MANUAL)
+  verified     Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  testimonials Testimonial[]
+
+  @@index([tenantId])
+}
+
+model ReviewRequest {
+  id            String   @id @default(cuid())
+  tenantId      String
+  customerEmail String
+  sentAt        DateTime @default(now())
+  completed     Boolean  @default(false)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model Testimonial {
+  id               String  @id @default(cuid())
+  tenantId         String
+  reviewId         String
+  displayOnWebsite Boolean @default(true)
+  order            Int     @default(0)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+// === ACTIVITY EVENTS ===
+
+model ActivityEvent {
+  id        String   @id @default(cuid())
+  tenantId  String
+  type      String // TICKET_REPLY, MILESTONE_COMPLETED, INVOICE_SENT, WEBSITE_DOWN, etc.
+  title     String
+  message   String?
+  link      String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
+// === WEBSITE MONITORING ===
+
+model UptimeCheck {
+  id        String   @id @default(cuid())
+  tenantId  String
+  isOnline  Boolean
+  loadTime  Float?
+  checkedAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, checkedAt])
+}
+
+model WebsiteAlert {
+  id         String    @id @default(cuid())
+  tenantId   String
+  type       String // DOWN, UP, SSL_EXPIRING, SLOW
+  message    String
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
+// === ADMIN: STANDAARD ANTWOORDEN ===
+
+model CannedResponse {
+  id      String @id @default(cuid())
+  title   String
+  content String
+
+  @@map("canned_responses")
+}
+
+// === COMMUNICATIE ===
+
+model Ticket {
+  id        String         @id @default(cuid())
+  tenantId  String
+  subject   String
+  status    TicketStatus   @default(OPEN)
+  priority  TicketPriority @default(NORMAAL)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messages TicketMessage[]
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+model TicketMessage {
+  id          String   @id @default(cuid())
+  ticketId    String
+  senderId    String
+  senderRole  Role
+  content     String
+  attachments Json?
+  createdAt   DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+}
