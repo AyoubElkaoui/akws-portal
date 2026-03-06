@@ -9,9 +9,10 @@ import { Download, Trash2 } from "lucide-react";
 interface FileActionsProps {
   fileId: string;
   hasShareLink: boolean;
+  r2Configured?: boolean;
 }
 
-export function FileActions({ fileId }: FileActionsProps) {
+export function FileActions({ fileId, r2Configured = true }: FileActionsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -63,6 +64,8 @@ export function FileActions({ fileId }: FileActionsProps) {
         size="icon"
         className="h-8 w-8 text-slate-400 hover:text-slate-600"
         onClick={handleDownload}
+        disabled={!r2Configured}
+        title={!r2Configured ? "Opslag niet geconfigureerd" : "Downloaden"}
       >
         <Download className="h-4 w-4" />
       </Button>

@@ -40,22 +40,43 @@ export default async function InvoicePdfPage({
 
   const { id } = await params;
 
-  const invoice = await db.invoice.findFirst({
-    where: { id, ...tenantScope(user.tenantId) },
-    include: {
-      invoiceItems: true,
-      tenant: {
-        select: {
-          companyName: true, domain: true, logo: true,
-          address: true, postalCode: true, city: true,
-          phone: true, email: true, kvkNumber: true,
-          btwNumber: true, iban: true, bic: true,
+  const [invoice, platform] = await Promise.all([
+    db.invoice.findFirst({
+      where: { id, ...tenantScope(user.tenantId) },
+      include: {
+        invoiceItems: true,
+        tenant: {
+          select: {
+            companyName: true, domain: true, logo: true,
+            address: true, postalCode: true, city: true,
+            phone: true, email: true, kvkNumber: true,
+            btwNumber: true, iban: true, bic: true,
+          },
         },
       },
-    },
-  });
+    }),
+    db.platformSettings.findUnique({ where: { id: "platform" } }),
+  ]);
 
   if (!invoice) notFound();
+
+  const isPlatformInvoice = invoice.type === "PLATFORM_FACTUUR";
+  const sender = isPlatformInvoice
+    ? {
+        companyName: platform?.companyName || "AK Web Solutions",
+        logo: platform?.logo || null,
+        address: platform?.address || null,
+        postalCode: platform?.postalCode || null,
+        city: platform?.city || null,
+        phone: platform?.phone || null,
+        email: platform?.email || null,
+        domain: platform?.website || null,
+        kvkNumber: platform?.kvkNumber || null,
+        btwNumber: platform?.btwNumber || null,
+        iban: platform?.iban || null,
+        bic: platform?.bic || null,
+      }
+    : invoice.tenant;
 
   return (
     <>
@@ -83,25 +104,25 @@ export default async function InvoicePdfPage({
           <div className="text-right flex items-start gap-3 justify-end">
             <div>
               <p className="text-lg font-bold text-slate-900">
-                {invoice.tenant.companyName}
+                {sender.companyName}
               </p>
-              {(invoice.tenant.address || invoice.tenant.city) && (
+              {(sender.address || sender.city) && (
                 <p className="text-sm text-slate-500">
-                  {invoice.tenant.address}
-                  {invoice.tenant.address && (invoice.tenant.postalCode || invoice.tenant.city) ? ", " : ""}
-                  {invoice.tenant.postalCode} {invoice.tenant.city}
+                  {sender.address}
+                  {sender.address && (sender.postalCode || sender.city) ? ", " : ""}
+                  {sender.postalCode} {sender.city}
                 </p>
               )}
-              {invoice.tenant.domain && (
+              {sender.domain && (
                 <p className="text-sm text-slate-500">
-                  {invoice.tenant.domain}
+                  {sender.domain}
                 </p>
               )}
             </div>
-            {invoice.tenant.logo && (
+            {sender.logo && (
               <img
-                src={invoice.tenant.logo}
-                alt={invoice.tenant.companyName}
+                src={sender.logo}
+                alt={sender.companyName}
                 className="h-14 w-14 rounded object-contain"
               />
             )}
@@ -217,22 +238,22 @@ export default async function InvoicePdfPage({
         </div>
 
         {/* Payment info */}
-        {invoice.tenant.iban && (
+        {sender.iban && (
           <div className="mt-10 rounded-lg bg-slate-50 p-5">
             <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-3">
               Betalingsgegevens
             </p>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <span className="text-slate-500">IBAN:</span>
-              <span className="font-medium text-slate-900">{invoice.tenant.iban}</span>
-              {invoice.tenant.bic && (
+              <span className="font-medium text-slate-900">{sender.iban}</span>
+              {sender.bic && (
                 <>
                   <span className="text-slate-500">BIC:</span>
-                  <span className="font-medium text-slate-900">{invoice.tenant.bic}</span>
+                  <span className="font-medium text-slate-900">{sender.bic}</span>
                 </>
               )}
               <span className="text-slate-500">T.n.v.:</span>
-              <span className="font-medium text-slate-900">{invoice.tenant.companyName}</span>
+              <span className="font-medium text-slate-900">{sender.companyName}</span>
             </div>
           </div>
         )}
@@ -240,11 +261,11 @@ export default async function InvoicePdfPage({
         {/* Footer */}
         <div className="mt-10 pt-6 border-t border-slate-200">
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-400">
-            <span>{invoice.tenant.companyName}</span>
-            {invoice.tenant.kvkNumber && <span>KvK: {invoice.tenant.kvkNumber}</span>}
-            {invoice.tenant.btwNumber && <span>BTW: {invoice.tenant.btwNumber}</span>}
-            {invoice.tenant.phone && <span>Tel: {invoice.tenant.phone}</span>}
-            {invoice.tenant.email && <span>{invoice.tenant.email}</span>}
+            <span>{sender.companyName}</span>
+            {sender.kvkNumber && <span>KvK: {sender.kvkNumber}</span>}
+            {sender.btwNumber && <span>BTW: {sender.btwNumber}</span>}
+            {sender.phone && <span>Tel: {sender.phone}</span>}
+            {sender.email && <span>{sender.email}</span>}
           </div>
         </div>
       </div>

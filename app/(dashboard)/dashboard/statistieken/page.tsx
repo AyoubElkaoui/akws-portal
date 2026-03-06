@@ -131,8 +131,7 @@ export default async function StatistiekenPage() {
             </p>
             <p className="text-xs text-slate-500 text-center max-w-md">
               Voeg het tracking-script toe aan je website om bezoekersdata te
-              verzamelen. Neem contact op met support voor hulp bij de
-              installatie.
+              verzamelen. Kopieer de code hieronder.
             </p>
           </CardContent>
         </Card>

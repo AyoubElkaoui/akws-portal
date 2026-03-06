@@ -34,15 +34,20 @@ export default async function AdminInvoicePdfPage({
 
   const { id } = await params;
 
-  const invoice = await db.invoice.findUnique({
-    where: { id },
-    include: {
-      invoiceItems: true,
-      tenant: { select: { companyName: true, domain: true, logo: true } },
-    },
-  });
+  const [invoice, platform] = await Promise.all([
+    db.invoice.findUnique({
+      where: { id },
+      include: {
+        invoiceItems: true,
+        tenant: { select: { companyName: true, domain: true, logo: true } },
+      },
+    }),
+    db.platformSettings.findUnique({ where: { id: "platform" } }),
+  ]);
 
   if (!invoice) notFound();
+
+  const hasAddress = platform?.address || platform?.city;
 
   return (
     <>
@@ -59,7 +64,7 @@ export default async function AdminInvoicePdfPage({
 
       {/* Invoice PDF layout */}
       <div className="mx-auto max-w-[800px] bg-white p-8 print:p-0 print:max-w-none">
-        {/* Header */}
+        {/* Header: AK Web Solutions (afzender) */}
         <div className="flex justify-between items-start mb-12">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">FACTUUR</h1>
@@ -70,25 +75,38 @@ export default async function AdminInvoicePdfPage({
           <div className="text-right flex items-start gap-3 justify-end">
             <div>
               <p className="text-lg font-bold text-slate-900">
-                {invoice.tenant.companyName}
+                {platform?.companyName || "AK Web Solutions"}
               </p>
-              {invoice.tenant.domain && (
+              {hasAddress && (
                 <p className="text-sm text-slate-500">
-                  {invoice.tenant.domain}
+                  {platform?.address}
+                  {platform?.address && (platform?.postalCode || platform?.city)
+                    ? ", "
+                    : ""}
+                  {platform?.postalCode} {platform?.city}
                 </p>
               )}
+              {platform?.website && (
+                <p className="text-sm text-slate-500">{platform.website}</p>
+              )}
+              {platform?.phone && (
+                <p className="text-sm text-slate-500">{platform.phone}</p>
+              )}
+              {platform?.email && (
+                <p className="text-sm text-slate-500">{platform.email}</p>
+              )}
             </div>
-            {invoice.tenant.logo && (
+            {platform?.logo && (
               <img
-                src={invoice.tenant.logo}
-                alt={invoice.tenant.companyName}
-                className="h-12 w-12 rounded object-contain"
+                src={platform.logo}
+                alt={platform.companyName}
+                className="h-14 w-14 rounded object-contain"
               />
             )}
           </div>
         </div>
 
-        {/* Customer + dates */}
+        {/* Customer (tenant) + dates */}
         <div className="grid grid-cols-2 gap-8 mb-10">
           <div>
             <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">
@@ -98,6 +116,11 @@ export default async function AdminInvoicePdfPage({
               {invoice.customerName}
             </p>
             <p className="text-sm text-slate-600">{invoice.customerEmail}</p>
+            {invoice.tenant.companyName && (
+              <p className="text-sm text-slate-500 mt-1">
+                {invoice.tenant.companyName}
+              </p>
+            )}
           </div>
           <div className="text-right">
             <div className="space-y-1 text-sm">
@@ -196,11 +219,42 @@ export default async function AdminInvoicePdfPage({
           </div>
         </div>
 
+        {/* Payment info */}
+        {platform?.iban && (
+          <div className="mt-10 rounded-lg bg-slate-50 p-5">
+            <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-3">
+              Betalingsgegevens
+            </p>
+            <div className="grid grid-cols-2 gap-1 text-sm">
+              <span className="text-slate-500">IBAN:</span>
+              <span className="font-medium text-slate-900">
+                {platform.iban}
+              </span>
+              {platform.bic && (
+                <>
+                  <span className="text-slate-500">BIC:</span>
+                  <span className="font-medium text-slate-900">
+                    {platform.bic}
+                  </span>
+                </>
+              )}
+              <span className="text-slate-500">T.n.v.:</span>
+              <span className="font-medium text-slate-900">
+                {platform.companyName}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Footer */}
-        <div className="mt-16 pt-8 border-t border-slate-200 text-center">
-          <p className="text-xs text-slate-400">
-            {invoice.tenant.companyName} &mdash; {invoice.invoiceNumber}
-          </p>
+        <div className="mt-16 pt-8 border-t border-slate-200">
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-400">
+            <span>{platform?.companyName || "AK Web Solutions"}</span>
+            {platform?.kvkNumber && <span>KvK: {platform.kvkNumber}</span>}
+            {platform?.btwNumber && <span>BTW: {platform.btwNumber}</span>}
+            {platform?.phone && <span>Tel: {platform.phone}</span>}
+            {platform?.email && <span>{platform.email}</span>}
+          </div>
         </div>
       </div>
     </>

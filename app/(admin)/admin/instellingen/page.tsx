@@ -1,8 +1,7 @@
 import { requireAdmin } from "@/lib/api/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { PlatformSettingsForm } from "./platform-settings-form";
 
 export default async function AdminInstellingenPage() {
   await requireAdmin();
@@ -20,13 +19,13 @@ export default async function AdminInstellingenPage() {
     },
     {
       key: "MOLLIE_API_KEY",
-      label: "Mollie API",
+      label: "Mollie (Betalingen)",
       configured: !!process.env.MOLLIE_API_KEY,
     },
     {
-      key: "RESEND_API_KEY",
-      label: "Resend (E-mail)",
-      configured: !!process.env.RESEND_API_KEY,
+      key: "SMTP_HOST",
+      label: "SMTP (E-mail)",
+      configured: !!(process.env.SMTP_HOST && process.env.SMTP_USERNAME && process.env.SMTP_PASSWORD),
     },
     {
       key: "R2_ACCESS_KEY_ID",
@@ -38,24 +37,18 @@ export default async function AdminInstellingenPage() {
       label: "Cron Beveiliging",
       configured: !!process.env.CRON_SECRET,
     },
-    {
-      key: "GOOGLE_PLACES_API_KEY",
-      label: "Google Places",
-      configured: !!process.env.GOOGLE_PLACES_API_KEY,
-    },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">
-          Configuratie overzicht
-        </h2>
+        <h2 className="text-2xl font-bold text-slate-900">Instellingen</h2>
         <p className="text-sm text-slate-500">
-          Status van API-koppelingen en externe services. Configuratie gebeurt
-          via environment variabelen.
+          Beheer je bedrijfsgegevens en API-koppelingen.
         </p>
       </div>
+
+      <PlatformSettingsForm />
 
       <Card>
         <CardHeader>

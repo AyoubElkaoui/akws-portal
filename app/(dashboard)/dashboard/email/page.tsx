@@ -18,6 +18,7 @@ import { Mail, Inbox, Send, Users } from "lucide-react";
 import { CreateCampaignDialog } from "./create-campaign-dialog";
 import { CampaignActions } from "./campaign-actions";
 import { SubmissionList } from "./submission-list";
+import { MailboxTab } from "./mailbox-tab";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   CONCEPT: {
@@ -118,8 +119,9 @@ export default async function EmailPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="campaigns">
+      <Tabs defaultValue="mailbox">
         <TabsList>
+          <TabsTrigger value="mailbox">Postvak</TabsTrigger>
           <TabsTrigger value="campaigns">Campagnes</TabsTrigger>
           <TabsTrigger value="submissions">
             Inzendingen
@@ -133,6 +135,10 @@ export default async function EmailPage() {
             )}
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="mailbox" className="mt-4">
+          <MailboxTab />
+        </TabsContent>
 
         <TabsContent value="campaigns" className="mt-4">
           {campaigns.length === 0 ? (

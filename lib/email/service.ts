@@ -1,13 +1,4 @@
-import { Resend } from "resend"
-
-let resend: Resend | null = null
-
-function getResend() {
-  if (!resend && process.env.RESEND_API_KEY) {
-    resend = new Resend(process.env.RESEND_API_KEY)
-  }
-  return resend
-}
+import nodemailer from "nodemailer"
 
 export interface SendEmailOptions {
   to: string | string[]
@@ -16,17 +7,36 @@ export interface SendEmailOptions {
   from?: string
 }
 
-export async function sendEmail({ to, subject, html, from }: SendEmailOptions) {
-  const client = getResend()
-  if (!client) {
-    console.warn("[Email] RESEND_API_KEY niet ingesteld, e-mail overgeslagen")
+function getTransporter() {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USERNAME || !process.env.SMTP_PASSWORD) {
     return null
   }
 
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || "465"),
+    secure: process.env.SMTP_TLS !== "false",
+    auth: {
+      user: process.env.SMTP_USERNAME,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  })
+}
+
+export async function sendEmail({ to, subject, html, from }: SendEmailOptions) {
+  const transporter = getTransporter()
+  if (!transporter) {
+    console.warn("[Email] SMTP niet geconfigureerd, e-mail overgeslagen")
+    return null
+  }
+
+  const fromName = process.env.SMTP_FROM_NAME || "AK Web Solutions"
+  const fromEmail = from || process.env.SMTP_FROM || "noreply@akwebsolutions.nl"
+
   try {
-    const result = await client.emails.send({
-      from: from || process.env.EMAIL_FROM || "AK Web Solutions <noreply@akwebsolutions.nl>",
-      to: Array.isArray(to) ? to : [to],
+    const result = await transporter.sendMail({
+      from: `${fromName} <${fromEmail}>`,
+      to: Array.isArray(to) ? to.join(", ") : to,
       subject,
       html,
     })

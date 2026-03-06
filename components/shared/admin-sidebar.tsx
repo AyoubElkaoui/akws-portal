@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -44,8 +45,14 @@ export function AdminSidebar({ className }: { className?: string }) {
       )}
     >
       <div className="flex h-16 items-center px-6">
-        <Link href="/admin" className="text-lg font-bold">
-          AK Web Solutions
+        <Link href="/admin" className="flex items-center gap-2">
+          <Image
+            src="/fulllogo.png"
+            alt="AK Web Solutions"
+            width={150}
+            height={45}
+            className="h-10 w-auto"
+          />
         </Link>
       </div>
       <div className="px-3 pb-3">

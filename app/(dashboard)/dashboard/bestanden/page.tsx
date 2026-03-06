@@ -4,6 +4,7 @@ import { requireTenant } from "@/lib/api/auth";
 import { isModuleEnabled } from "@/lib/db/tenant";
 import { db } from "@/lib/db";
 import { tenantScope } from "@/lib/db/tenant";
+import { isR2Configured } from "@/lib/storage/r2";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -22,6 +23,7 @@ import {
   File as FileGenericIcon,
   Link2,
   ArrowLeft,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateFolderDialog } from "./create-folder-dialog";
@@ -61,6 +63,8 @@ export default async function BestandenPage({
   }
 
   const { folder: folderId } = await searchParams;
+
+  const r2Configured = isR2Configured();
 
   // Get current folder info + breadcrumbs
   let currentFolder = null;
@@ -123,9 +127,27 @@ export default async function BestandenPage({
         </div>
         <div className="flex items-center gap-2">
           <CreateFolderDialog parentId={folderId} />
-          <UploadFileDialog folderId={folderId} />
+          {r2Configured && <UploadFileDialog folderId={folderId} />}
         </div>
       </div>
+
+      {/* R2 not configured warning */}
+      {!r2Configured && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="flex items-start gap-3 py-4">
+            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-amber-800">
+                Bestandsopslag is nog niet geconfigureerd
+              </p>
+              <p className="text-sm text-amber-700 mt-1">
+                Het uploaden en downloaden van bestanden is momenteel niet beschikbaar.
+                Neem contact op met de beheerder om de opslagconfiguratie in te stellen.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Breadcrumbs */}
       {breadcrumbs.length > 0 && (
@@ -247,6 +269,7 @@ export default async function BestandenPage({
                         <FileActions
                           fileId={file.id}
                           hasShareLink={!!file.shareLink}
+                          r2Configured={r2Configured}
                         />
                       </TableCell>
                     </TableRow>

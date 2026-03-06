@@ -11,6 +11,7 @@ const updateTenantSchema = z.object({
   domain: z.string().optional(),
   active: z.boolean().optional(),
   primaryColor: z.string().optional(),
+  logo: z.string().max(300000).nullable().optional(),
 });
 
 export async function GET(

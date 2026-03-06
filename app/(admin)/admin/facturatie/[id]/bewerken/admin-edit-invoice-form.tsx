@@ -46,18 +46,31 @@ interface InvoiceData {
   items: InvoiceItem[]
 }
 
+interface PlatformInfo {
+  companyName: string
+  logo: string | null
+  address: string | null
+  postalCode: string | null
+  city: string | null
+  phone: string | null
+  email: string | null
+  website: string | null
+  kvkNumber: string | null
+  btwNumber: string | null
+  iban: string | null
+  bic: string | null
+}
+
 interface AdminEditInvoiceFormProps {
   invoice: InvoiceData
-  companyName: string
-  companyDomain: string | null
-  companyLogo: string | null
+  tenantCompanyName: string
+  platform: PlatformInfo | null
 }
 
 export function AdminEditInvoiceForm({
   invoice,
-  companyName,
-  companyDomain,
-  companyLogo,
+  tenantCompanyName,
+  platform,
 }: AdminEditInvoiceFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -243,17 +256,26 @@ export function AdminEditInvoiceForm({
         </form>
       </div>
 
-      {/* Live preview — right side */}
+      {/* Live preview — right side (AK Web Solutions as sender) */}
       <div className="lg:col-span-2 hidden lg:block">
         <div className="sticky top-6">
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
             Live preview
           </p>
           <InvoicePreview
-            companyName={companyName}
-            companyDomain={companyDomain}
-            companyLogo={companyLogo}
-            customerName={customerName}
+            companyName={platform?.companyName || "AK Web Solutions"}
+            companyDomain={platform?.website}
+            companyLogo={platform?.logo}
+            companyAddress={platform?.address}
+            companyPostalCode={platform?.postalCode}
+            companyCity={platform?.city}
+            companyPhone={platform?.phone}
+            companyEmail={platform?.email}
+            companyKvk={platform?.kvkNumber}
+            companyBtw={platform?.btwNumber}
+            companyIban={platform?.iban}
+            companyBic={platform?.bic}
+            customerName={customerName || tenantCompanyName}
             customerEmail={customerEmail}
             items={items}
             vatRate={vatRate}

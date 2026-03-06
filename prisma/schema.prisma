@@ -159,6 +159,7 @@ model Tenant {
   activityEvents     ActivityEvent[]
   uptimeChecks       UptimeCheck[]
   websiteAlerts      WebsiteAlert[]
+  emailAccounts      EmailAccount[]
 
   @@index([slug])
 }
@@ -682,4 +683,47 @@ model Notification {
 
   @@index([userId])
   @@index([read])
+}
+
+// === PLATFORM (Admin) Settings ===
+
+model PlatformSettings {
+  id          String  @id @default("platform")
+  companyName String  @default("AK Web Solutions")
+  logo        String?
+  address     String?
+  postalCode  String?
+  city        String?
+  phone       String?
+  email       String?
+  website     String?
+  kvkNumber   String?
+  btwNumber   String?
+  iban        String?
+  bic         String?
+  updatedAt   DateTime @updatedAt
+}
+
+// === E-mail accounts (IMAP/SMTP per tenant) ===
+
+model EmailAccount {
+  id           String  @id @default(cuid())
+  tenantId     String
+  email        String
+  displayName  String?
+  imapHost     String
+  imapPort     Int     @default(993)
+  smtpHost     String
+  smtpPort     Int     @default(465)
+  username     String
+  password     String  // encrypted in production
+  useTls       Boolean @default(true)
+  active       Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
 }

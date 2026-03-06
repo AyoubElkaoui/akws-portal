@@ -12,13 +12,16 @@ export default async function AdminBewerkenFactuurPage({
 
   const { id } = await params
 
-  const invoice = await db.invoice.findUnique({
-    where: { id },
-    include: {
-      invoiceItems: true,
-      tenant: { select: { companyName: true, domain: true, logo: true } },
-    },
-  })
+  const [invoice, platform] = await Promise.all([
+    db.invoice.findUnique({
+      where: { id },
+      include: {
+        invoiceItems: true,
+        tenant: { select: { companyName: true, domain: true, logo: true } },
+      },
+    }),
+    db.platformSettings.findUnique({ where: { id: "platform" } }),
+  ])
 
   if (!invoice) notFound()
 
@@ -49,9 +52,21 @@ export default async function AdminBewerkenFactuurPage({
             unitPrice: item.unitPrice,
           })),
         }}
-        companyName={invoice.tenant.companyName}
-        companyDomain={invoice.tenant.domain}
-        companyLogo={invoice.tenant.logo}
+        tenantCompanyName={invoice.tenant.companyName}
+        platform={platform ? {
+          companyName: platform.companyName,
+          logo: platform.logo,
+          address: platform.address,
+          postalCode: platform.postalCode,
+          city: platform.city,
+          phone: platform.phone,
+          email: platform.email,
+          website: platform.website,
+          kvkNumber: platform.kvkNumber,
+          btwNumber: platform.btwNumber,
+          iban: platform.iban,
+          bic: platform.bic,
+        } : null}
       />
     </div>
   )

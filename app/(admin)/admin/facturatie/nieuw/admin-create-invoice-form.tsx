@@ -24,6 +24,21 @@ interface Tenant {
   logo: string | null
 }
 
+interface PlatformInfo {
+  companyName: string
+  logo: string | null
+  address: string | null
+  postalCode: string | null
+  city: string | null
+  phone: string | null
+  email: string | null
+  website: string | null
+  kvkNumber: string | null
+  btwNumber: string | null
+  iban: string | null
+  bic: string | null
+}
+
 interface InvoiceItem {
   description: string
   quantity: number
@@ -42,7 +57,13 @@ const VAT_LABELS: Record<string, string> = {
   VRIJGESTELD: "0% (vrijgesteld)",
 }
 
-export function AdminCreateInvoiceForm({ tenants }: { tenants: Tenant[] }) {
+export function AdminCreateInvoiceForm({
+  tenants,
+  platform,
+}: {
+  tenants: Tenant[]
+  platform: PlatformInfo | null
+}) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [tenantId, setTenantId] = useState("")
@@ -259,17 +280,26 @@ export function AdminCreateInvoiceForm({ tenants }: { tenants: Tenant[] }) {
         </form>
       </div>
 
-      {/* Live preview — right side */}
+      {/* Live preview — right side (shows AK Web Solutions as sender) */}
       <div className="lg:col-span-2 hidden lg:block">
         <div className="sticky top-6">
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
             Live preview
           </p>
           <InvoicePreview
-            companyName={selectedTenant?.companyName || "Selecteer een klant"}
-            companyDomain={selectedTenant?.domain}
-            companyLogo={selectedTenant?.logo}
-            customerName={customerName}
+            companyName={platform?.companyName || "AK Web Solutions"}
+            companyDomain={platform?.website}
+            companyLogo={platform?.logo}
+            companyAddress={platform?.address}
+            companyPostalCode={platform?.postalCode}
+            companyCity={platform?.city}
+            companyPhone={platform?.phone}
+            companyEmail={platform?.email}
+            companyKvk={platform?.kvkNumber}
+            companyBtw={platform?.btwNumber}
+            companyIban={platform?.iban}
+            companyBic={platform?.bic}
+            customerName={customerName || (selectedTenant?.companyName ?? "")}
             customerEmail={customerEmail}
             items={items}
             vatRate={vatRate}
