@@ -158,7 +158,7 @@ export default async function BestandenPage({
           >
             Bestanden
           </Link>
-          {breadcrumbs.map((crumb) => (
+          {breadcrumbs.map((crumb: any) => (
             <span key={crumb.id} className="flex items-center gap-1">
               <span className="text-slate-400">/</span>
               <Link
@@ -216,7 +216,7 @@ export default async function BestandenPage({
               </TableHeader>
               <TableBody>
                 {/* Folders first */}
-                {folders.map((folder) => (
+                {folders.map((folder: any) => (
                   <TableRow key={folder.id}>
                     <TableCell>
                       <Link
@@ -237,7 +237,7 @@ export default async function BestandenPage({
                   </TableRow>
                 ))}
                 {/* Files */}
-                {files.map((file) => {
+                {files.map((file: any) => {
                   const Icon = getFileIcon(file.mimeType);
 
                   return (

@@ -109,13 +109,13 @@ export default async function TenantDetailPage({
   if (!tenant) notFound();
 
   const totalRevenue = tenant.invoices
-    .filter((i) => i.status === "BETAALD")
-    .reduce((sum, i) => sum + i.total, 0);
+    .filter((i: any) => i.status === "BETAALD")
+    .reduce((sum: number, i: any) => sum + i.total, 0);
   const openInvoices = tenant.invoices.filter(
-    (i) => i.status === "VERZONDEN" || i.status === "VERLOPEN",
+    (i: any) => i.status === "VERZONDEN" || i.status === "VERLOPEN",
   );
   const openTickets = tenant.tickets.filter(
-    (t) => t.status !== "GESLOTEN",
+    (t: any) => t.status !== "GESLOTEN",
   );
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://portal.akwebsolutions.nl";
@@ -235,7 +235,7 @@ export default async function TenantDetailPage({
                   <p className="text-sm text-slate-500">Geen gebruikers</p>
                 ) : (
                   <div className="space-y-2">
-                    {tenant.users.map((user) => (
+                    {tenant.users.map((user: any) => (
                       <div key={user.id} className="flex items-center justify-between rounded-lg border p-3">
                         <div>
                           <p className="text-sm font-medium text-slate-900">{user.name}</p>
@@ -292,7 +292,7 @@ export default async function TenantDetailPage({
                   <p className="text-sm text-slate-400">Geen tickets</p>
                 ) : (
                   <div className="space-y-2">
-                    {tenant.tickets.slice(0, 5).map((ticket) => (
+                    {tenant.tickets.slice(0, 5).map((ticket: any) => (
                       <Link key={ticket.id} href={`/admin/tickets/${ticket.id}`} className="flex items-center justify-between text-sm hover:bg-slate-50 rounded px-2 py-1.5 -mx-2">
                         <span className="truncate text-slate-700">{ticket.subject}</span>
                         <Badge variant="secondary" className={`shrink-0 ml-2 text-xs ${ticket.status === "OPEN" ? "bg-blue-100 text-blue-700" : ticket.status === "IN_BEHANDELING" ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-500"}`}>
@@ -314,7 +314,7 @@ export default async function TenantDetailPage({
                   <p className="text-sm text-slate-400">Niet geconfigureerd</p>
                 ) : (
                   <div className="space-y-3">
-                    {tenant.websiteStatus.map((ws) => (
+                    {tenant.websiteStatus.map((ws: any) => (
                       <div key={ws.id} className="space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-slate-700 truncate">{ws.url}</span>
@@ -342,7 +342,7 @@ export default async function TenantDetailPage({
                   <p className="text-sm text-slate-400">Geen onderhoud</p>
                 ) : (
                   <div className="space-y-2">
-                    {tenant.maintenanceLogs.slice(0, 5).map((log) => (
+                    {tenant.maintenanceLogs.slice(0, 5).map((log: any) => (
                       <div key={log.id} className="flex items-center justify-between text-sm">
                         <span className="truncate text-slate-700">{log.description}</span>
                         <Badge variant="secondary" className={`shrink-0 ml-2 text-xs ${log.type === "UPDATE" ? "bg-blue-50 text-blue-700" : log.type === "BACKUP" ? "bg-green-50 text-green-700" : "bg-orange-50 text-orange-700"}`}>
@@ -372,20 +372,20 @@ export default async function TenantDetailPage({
                 <p className="text-sm text-slate-500 py-4 text-center">Nog geen projecten voor deze klant.</p>
               ) : (
                 <div className="space-y-3">
-                  {tenant.projects.map((project) => (
+                  {tenant.projects.map((project: any) => (
                     <ProjectManagement
                       key={project.id}
                       project={{
                         id: project.id,
                         name: project.name,
                         status: project.status,
-                        milestones: project.milestones.map((m) => ({
+                        milestones: project.milestones.map((m: any) => ({
                           id: m.id,
                           title: m.title,
                           completed: m.completed,
                           dueDate: m.dueDate?.toISOString() || null,
                         })),
-                        revisions: project.revisions.map((r) => ({
+                        revisions: project.revisions.map((r: any) => ({
                           id: r.id,
                           description: r.description,
                           status: r.status,
@@ -429,7 +429,7 @@ export default async function TenantDetailPage({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {tenant.invoices.map((invoice) => {
+                    {tenant.invoices.map((invoice: any) => {
                       const status = invoiceStatusConfig[invoice.status];
                       return (
                         <TableRow key={invoice.id}>
@@ -476,7 +476,7 @@ export default async function TenantDetailPage({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {tenant.tickets.map((ticket) => (
+                    {tenant.tickets.map((ticket: any) => (
                       <TableRow key={ticket.id}>
                         <TableCell>
                           <Link href={`/admin/tickets/${ticket.id}`} className="font-medium text-slate-900 hover:text-blue-600 hover:underline">
@@ -513,7 +513,7 @@ export default async function TenantDetailPage({
                 <p className="text-sm text-slate-500 text-center py-4">Geen website geconfigureerd. Stel een domein in bij Instellingen.</p>
               ) : (
                 <div className="space-y-4">
-                  {tenant.websiteStatus.map((ws) => (
+                  {tenant.websiteStatus.map((ws: any) => (
                     <div key={ws.id} className="rounded-lg border p-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">{ws.url}</span>
@@ -558,7 +558,7 @@ export default async function TenantDetailPage({
                 <p className="text-sm text-slate-500 text-center py-4">Geen onderhoud gelogd.</p>
               ) : (
                 <div className="space-y-2">
-                  {tenant.maintenanceLogs.map((log) => (
+                  {tenant.maintenanceLogs.map((log: any) => (
                     <div key={log.id} className="flex items-center justify-between text-sm rounded-lg border px-3 py-2">
                       <span className="text-slate-700">{log.description}</span>
                       <div className="flex items-center gap-2">
@@ -585,7 +585,7 @@ export default async function TenantDetailPage({
           <TenantModules
             tenantId={tenant.id}
             tenantPlan={tenant.plan}
-            modules={tenant.tenantModules.map((tm) => ({
+            modules={tenant.tenantModules.map((tm: any) => ({
               id: tm.module.id,
               slug: tm.module.slug,
               name: tm.module.name,

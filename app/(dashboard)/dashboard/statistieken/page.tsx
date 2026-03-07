@@ -74,7 +74,7 @@ export default async function StatistiekenPage() {
       }),
     ]);
 
-  const totalDevices = devices.reduce((sum, d) => sum + d._count.device, 0);
+  const totalDevices = devices.reduce((sum: number, d: any) => sum + d._count.device, 0);
 
   return (
     <div className="space-y-6">
@@ -159,7 +159,7 @@ export default async function StatistiekenPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {topPages.map((p) => (
+                  {topPages.map((p: any) => (
                     <TableRow key={p.page}>
                       <TableCell className="font-medium text-slate-900">
                         {p.page}
@@ -194,7 +194,7 @@ export default async function StatistiekenPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {topReferrers.map((r) => (
+                  {topReferrers.map((r: any) => (
                     <TableRow key={r.referrer}>
                       <TableCell className="font-medium text-slate-900">
                         {r.referrer || "Direct"}
@@ -222,7 +222,7 @@ export default async function StatistiekenPage() {
               </p>
             ) : (
               <div className="space-y-3">
-                {devices.map((d) => {
+                {devices.map((d: any) => {
                   const percentage =
                     totalDevices > 0
                       ? Math.round((d._count.device / totalDevices) * 100)

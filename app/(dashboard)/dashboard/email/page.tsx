@@ -64,7 +64,7 @@ export default async function EmailPage() {
     }),
   ]);
 
-  const unreadCount = submissions.filter((s) => !s.read).length;
+  const unreadCount = submissions.filter((s: any) => !s.read).length;
 
   return (
     <div className="space-y-6">
@@ -101,7 +101,7 @@ export default async function EmailPage() {
             <div>
               <p className="text-sm text-slate-500">Verzonden</p>
               <p className="text-xl font-bold text-slate-900">
-                {campaigns.filter((c) => c.status === "VERZONDEN").length}
+                {campaigns.filter((c: any) => c.status === "VERZONDEN").length}
               </p>
             </div>
           </CardContent>
@@ -164,7 +164,7 @@ export default async function EmailPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {campaigns.map((campaign) => {
+                    {campaigns.map((campaign: any) => {
                       const status = statusConfig[campaign.status];
                       return (
                         <TableRow key={campaign.id}>
@@ -204,7 +204,7 @@ export default async function EmailPage() {
 
         <TabsContent value="submissions" className="mt-4">
           <SubmissionList
-            submissions={submissions.map((sub) => ({
+            submissions={submissions.map((sub: any) => ({
               id: sub.id,
               formName: sub.formName,
               data: sub.data as Record<string, unknown>,

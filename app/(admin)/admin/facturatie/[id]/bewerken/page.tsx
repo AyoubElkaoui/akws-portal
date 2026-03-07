@@ -46,7 +46,7 @@ export default async function AdminBewerkenFactuurPage({
           vatRate: invoice.vatRate,
           dueDate: invoice.dueDate.toISOString().split("T")[0],
           createdAt: invoice.createdAt.toISOString(),
-          items: invoice.invoiceItems.map((item) => ({
+          items: invoice.invoiceItems.map((item: any) => ({
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice,

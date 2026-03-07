@@ -167,7 +167,7 @@ export default async function AdminInvoicePdfPage({
             </tr>
           </thead>
           <tbody>
-            {invoice.invoiceItems.map((item, index) => (
+            {invoice.invoiceItems.map((item: any, index: number) => (
               <tr
                 key={item.id}
                 className={
