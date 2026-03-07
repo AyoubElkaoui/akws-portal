@@ -3,7 +3,6 @@
 import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,14 +85,11 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
       <Card className="w-full max-w-md border-slate-800 bg-slate-900">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4">
-            <Image
+          <div className="flex justify-center mb-4">
+            <img
               src="/fulllogo.png"
               alt="AK Web Solutions"
-              width={200}
-              height={60}
               className="h-16 w-auto"
-              priority
             />
           </div>
           <CardTitle className="text-2xl font-bold text-white">
