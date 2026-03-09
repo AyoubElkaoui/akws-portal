@@ -1,8 +1,7 @@
-import { getToken } from "next-auth/jwt";
+import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export async function middleware(req: NextRequest) {
+export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   // Public routes — always accessible
@@ -21,18 +20,17 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Decode JWT without importing bcryptjs or Prisma
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  const session = req.auth;
 
   // Not logged in — redirect to login
-  if (!token) {
+  if (!session) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  const role = token.role as string | undefined;
-  const tenantId = token.tenantId as string | undefined;
+  const role = (session.user as any)?.role as string | undefined;
+  const tenantId = (session.user as any)?.tenantId as string | undefined;
 
   // Admin routes — only for admins
   if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
@@ -49,7 +47,7 @@ export async function middleware(req: NextRequest) {
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.svg$|.*\\.ico$|.*\\.webp$).*)"],
