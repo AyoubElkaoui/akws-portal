@@ -21,13 +21,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // NextAuth v5 uses "authjs.session-token" cookie and reads AUTH_SECRET from env
-  const token = await getToken({
-    req,
-    secret: process.env.AUTH_SECRET,
-    salt: "authjs.session-token",
-    cookieName: "authjs.session-token",
-  });
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
 
   // Not logged in — redirect to login
   if (!token) {
