@@ -1,7 +1,8 @@
-import { auth } from "@/lib/auth";
+import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default auth((req) => {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Public routes — always accessible
@@ -20,17 +21,23 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  const session = req.auth;
+  // NextAuth v5 uses "authjs.session-token" cookie and reads AUTH_SECRET from env
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET,
+    salt: "authjs.session-token",
+    cookieName: "authjs.session-token",
+  });
 
   // Not logged in — redirect to login
-  if (!session) {
+  if (!token) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  const role = (session.user as any)?.role as string | undefined;
-  const tenantId = (session.user as any)?.tenantId as string | undefined;
+  const role = token.role as string | undefined;
+  const tenantId = token.tenantId as string | undefined;
 
   // Admin routes — only for admins
   if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
@@ -47,7 +54,7 @@ export default auth((req) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.svg$|.*\\.ico$|.*\\.webp$).*)"],
