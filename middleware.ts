@@ -22,7 +22,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Decode JWT without importing bcryptjs or Prisma
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
 
   // Not logged in — redirect to login
   if (!token) {
